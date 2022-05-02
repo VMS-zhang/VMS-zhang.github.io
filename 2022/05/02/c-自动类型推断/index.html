@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="c++11 提供了两种自动类型推断的方式：  auto decltype  autoauto让编译器去分析表达式的类型，与原来的特定的类型说明符（例如 double）不同的是，auto 通过让编译器使用初始值来推算变量的类型。所以：auto定义的变量必须有初始值。 123int a &#x3D; 1;int b &#x3D; 2;auto c &#x3D; a + b; &#x2F;&#x2F; c初始化为 a和 b 相加的结果  如果 a 和">
+<meta property="og:type" content="article">
+<meta property="og:title" content="c++自动类型推断">
+<meta property="og:url" content="http://example.com/2022/05/02/c-%E8%87%AA%E5%8A%A8%E7%B1%BB%E5%9E%8B%E6%8E%A8%E6%96%AD/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="c++11 提供了两种自动类型推断的方式：  auto decltype  autoauto让编译器去分析表达式的类型，与原来的特定的类型说明符（例如 double）不同的是，auto 通过让编译器使用初始值来推算变量的类型。所以：auto定义的变量必须有初始值。 123int a &#x3D; 1;int b &#x3D; 2;auto c &#x3D; a + b; &#x2F;&#x2F; c初始化为 a和 b 相加的结果  如果 a 和">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220502233643.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220502234131.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220503001255.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220503001716.png">
+<meta property="article:published_time" content="2022-05-02T15:28:53.000Z">
+<meta property="article:modified_time" content="2022-05-02T16:19:22.961Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220502233643.png">
+
+<link rel="canonical" href="http://example.com/2022/05/02/c-%E8%87%AA%E5%8A%A8%E7%B1%BB%E5%9E%8B%E6%8E%A8%E6%96%AD/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>c++自动类型推断 | Hexo</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/05/02/c-%E8%87%AA%E5%8A%A8%E7%B1%BB%E5%9E%8B%E6%8E%A8%E6%96%AD/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          c++自动类型推断
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-05-02 23:28:53" itemprop="dateCreated datePublished" datetime="2022-05-02T23:28:53+08:00">2022-05-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-05-03 00:19:22" itemprop="dateModified" datetime="2022-05-03T00:19:22+08:00">2022-05-03</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/cpp/" itemprop="url" rel="index"><span itemprop="name">cpp</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>c++11 提供了两种自动类型推断的方式：</p>
+<ol>
+<li>auto</li>
+<li>decltype</li>
+</ol>
+<h1 id="auto"><a href="#auto" class="headerlink" title="auto"></a>auto</h1><p>auto让编译器去分析表达式的类型，与原来的特定的类型说明符（例如 double）不同的是，auto 通过让编译器使用初始值来推算变量的类型。所以：<strong>auto定义的变量必须有初始值</strong>。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> a = <span class="number">1</span>;</span><br><span class="line"><span class="type">int</span> b = <span class="number">2</span>;</span><br><span class="line"><span class="keyword">auto</span> c = a + b; <span class="comment">// c初始化为 a和 b 相加的结果</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>如果 a 和 b 是 int 的对象，那 c 的类型就是 int</li>
+<li>如果 a 和 b 是 class A 的对象，那么 c 的类型就是 class A</li>
+</ul>
+<ol>
+<li><p>auto 可以一次性生命多个变量，但是多个变量的类型必须相同。<br><img src="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220502233643.png"><br>自动推断出了 c 的类型是 A，d 的类型是 A*。</p>
+</li>
+<li><p>编译器推断出来的 auto 类型有时候可能和初始值的类型不一样</p>
+</li>
+</ol>
+<ul>
+<li>在使用引用的时候实际使用的是引用的对象，特别是当引用被用作初始值的时候，真正参与初始化的其实是引用对象的值。<br>此时编译器自动以引用对象的类型作为 auto 的类型：<br><img src="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220502234131.png"></li>
+</ul>
+<h1 id="decltype"><a href="#decltype" class="headerlink" title="decltype"></a>decltype</h1><p>decltpye:想要使用表达式的类型推断出来定义的变量的类型，而又不想使用该表达式的类型的值来初始化变量；其主要作用是返回操作数的数据类型，在此过程中，编译器分析表达式并得到他的类型，但不实际计算其值。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// x的类型就是 f()的返回类型</span></span><br><span class="line"><span class="comment">// 编译器没有执行 f，而是使用调用发生时f 的返回值类型作为 x 的类型</span></span><br><span class="line"><span class="keyword">decltype</span>(<span class="built_in">f</span>()) x = a;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>1.如果 decltype 使用的表达式是一个<strong>变量</strong>，那么 decltype 返回该变量的类型（包括 const 和引用）</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> &amp;<span class="title">f</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">g</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> a = <span class="number">1</span>;</span><br><span class="line"><span class="comment">// x 类型为 int&amp;</span></span><br><span class="line"><span class="keyword">decltype</span>(<span class="built_in">f</span>()) x = a;</span><br><span class="line"><span class="comment">// y 类型为 int</span></span><br><span class="line"><span class="keyword">decltype</span>(<span class="built_in">g</span>()) y = a;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>2.如果 decltype 使用的表达式不是一个变量，那么返回表达式结果对应的类型</p>
+</blockquote>
+<ul>
+<li>如果表达式的求值结果是左值，那么 decltpye作用于该表达式（不是变量）得到一个引用类型<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> i = <span class="number">42</span>, *p = &amp;i, &amp;r = i;</span><br><span class="line"><span class="keyword">decltype</span>(r + <span class="number">0</span>) b; <span class="comment">// r+0是一个右值，类型是 int</span></span><br><span class="line"><span class="keyword">decltype</span>(*p) c = i; <span class="comment">// *p可以被赋值，所以是一个左值,int&amp;</span></span><br></pre></td></tr></table></figure>
+<img src="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220503001255.png"></li>
+</ul>
+<blockquote>
+<p>3.对于 decltype 所用的表达式，如果变量名加上()，得到的结果和不加()不同</p>
+</blockquote>
+<ul>
+<li>如果加上一个 or 多个（），编译器会把变量看做表达式</li>
+<li>不加括号，则得到变量的类型<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> i = <span class="number">42</span>;</span><br><span class="line">(i) = <span class="number">3</span>; <span class="comment">// (i)可以被赋值</span></span><br><span class="line"><span class="comment">// (i)被看做一个表达式，(i)可以被赋值，所以会得到引用类型</span></span><br><span class="line"><span class="keyword">decltype</span>((i)) d = i;</span><br><span class="line"><span class="comment">// i 是一个变量，返回其实际类型</span></span><br><span class="line"><span class="keyword">decltype</span>(i) e;</span><br></pre></td></tr></table></figure>
+<img src="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220503001716.png"></li>
+</ul>
+<p>decltpye((variable)) 双层括号的结果永远是引用;decltpye(variable)只有当变量本身是引用类型时候才是引用。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/05/02/%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/" rel="prev" title="智能指针">
+      <i class="fa fa-chevron-left"></i> 智能指针
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#auto"><span class="nav-number">1.</span> <span class="nav-text">auto</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#decltype"><span class="nav-number">2.</span> <span class="nav-text">decltype</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">John Doe</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
