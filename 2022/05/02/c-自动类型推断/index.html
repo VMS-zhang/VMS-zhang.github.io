@@ -32,7 +32,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220503001255.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220503001716.png">
 <meta property="article:published_time" content="2022-05-02T15:28:53.000Z">
-<meta property="article:modified_time" content="2022-05-02T16:19:22.961Z">
+<meta property="article:modified_time" content="2022-05-02T16:39:24.584Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220502233643.png">
@@ -185,7 +185,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-05-03 00:19:22" itemprop="dateModified" datetime="2022-05-03T00:19:22+08:00">2022-05-03</time>
+                <time title="Modified: 2022-05-03 00:39:24" itemprop="dateModified" datetime="2022-05-03T00:39:24+08:00">2022-05-03</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -226,7 +226,7 @@
 </li>
 </ol>
 <ul>
-<li>在使用引用的时候实际使用的是引用的对象，特别是当引用被用作初始值的时候，真正参与初始化的其实是引用对象的值。<br>此时编译器自动以引用对象的类型作为 auto 的类型：<br><img src="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220502234131.png"></li>
+<li>在使用引用的时候实际使用的是引用的对象，特别是当引用被用作初始值的时候，<strong>真正参与初始化的其实是引用对象的值</strong>。<br>此时编译器自动以引用对象的类型作为 auto 的类型：<br><img src="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220502234131.png"></li>
 </ul>
 <h1 id="decltype"><a href="#decltype" class="headerlink" title="decltype"></a>decltype</h1><p>decltpye:想要使用表达式的类型推断出来定义的变量的类型，而又不想使用该表达式的类型的值来初始化变量；其主要作用是返回操作数的数据类型，在此过程中，编译器分析表达式并得到他的类型，但不实际计算其值。</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// x的类型就是 f()的返回类型</span></span><br><span class="line"><span class="comment">// 编译器没有执行 f，而是使用调用发生时f 的返回值类型作为 x 的类型</span></span><br><span class="line"><span class="keyword">decltype</span>(<span class="built_in">f</span>()) x = a;</span><br></pre></td></tr></table></figure>
@@ -270,10 +270,7 @@
     <a href="/2022/05/02/%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/" rel="prev" title="RAII 和 智能指针">
       <i class="fa fa-chevron-left"></i> RAII 和 智能指针
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2022/05/03/g/" rel="next" title="g">
-      g <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -346,7 +343,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-count">6</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
