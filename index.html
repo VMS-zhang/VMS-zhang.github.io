@@ -145,6 +145,63 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/05/03/g/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/05/03/g/" class="post-title-link" itemprop="url">g</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-05-03 00:36:15" itemprop="dateCreated datePublished" datetime="2022-05-03T00:36:15+08:00">2022-05-03</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2022/05/02/c-%E8%87%AA%E5%8A%A8%E7%B1%BB%E5%9E%8B%E6%8E%A8%E6%96%AD/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -276,7 +333,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/05/02/%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/" class="post-title-link" itemprop="url">智能指针</a>
+            <a href="/2022/05/02/%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/" class="post-title-link" itemprop="url">RAII 和 智能指针</a>
         </h2>
 
         <div class="post-meta">
@@ -285,10 +342,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2022-05-02 20:43:16 / Modified: 23:20:07" itemprop="dateCreated datePublished" datetime="2022-05-02T20:43:16+08:00">2022-05-02</time>
+              <time title="Created: 2022-05-02 20:43:16" itemprop="dateCreated datePublished" datetime="2022-05-02T20:43:16+08:00">2022-05-02</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-05-03 00:36:06" itemprop="dateModified" datetime="2022-05-03T00:36:06+08:00">2022-05-03</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -310,7 +373,27 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>使用 new 和 delete 来进行动态内存的管理是很困难的，无法保证正确的释放。<br>为了更安全、高效的使用动态内存，提供了两种智能指针：shared_ptr 和 unique_ptr。  </p>
+          <h1 id="RAII"><a href="#RAII" class="headerlink" title="RAII"></a>RAII</h1><p>RAII（Resource Acquisition Is Initialization）是由c++之父Bjarne Stroustrup提出的，中文翻译为资源获取即初始化，他说：使用局部对象来管理资源的技术称为资源获取即初始化；这里的资源主要是指操作系统中有限的东西如内存、网络套接字等等，局部对象是指存储在栈的对象，它的生命周期是由操作系统来管理的，无需人工介入；</p>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>资源使用一般是三个步骤：</p>
+<ol>
+<li>获取</li>
+<li>使用</li>
+<li>销毁</li>
+</ol>
+<p>如果忘记了销毁，会造成资源泄漏，导致程序崩溃。 为了让资源自动的销毁，Bjarne给出的解决方案是：RAII。</p>
+<p>其原理是 C++ 的局部变量会在退出其作用域的时候自动的被销毁；根据这个特性，可以让局部变量被销毁的时候把资源进行释放。</p>
+<h2 id="使用实例"><a href="#使用实例" class="headerlink" title="使用实例"></a>使用实例</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">raii</span> &#123;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="type">int</span> *p;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">raii</span>() &#123;</span><br><span class="line">        p = <span class="keyword">new</span> <span class="type">int</span>[<span class="number">10</span>];</span><br><span class="line">        cout &lt;&lt; <span class="string">&quot;申请了 int[10]的资源&quot;</span> &lt;&lt; endl;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ~<span class="built_in">raii</span>() &#123;</span><br><span class="line">        <span class="keyword">delete</span>[] p;</span><br><span class="line">        cout &lt;&lt; <span class="string">&quot;释放了 int[10]的资源&quot;</span> &lt;&lt; endl;</span><br><span class="line">        cout &lt;&lt; <span class="string">&quot;raii 对象被销毁&quot;</span> &lt;&lt; endl;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    raii a;</span><br><span class="line">    cout &lt;&lt; <span class="string">&quot;现在 raii 申请了 int[10]的空间&quot;</span> &lt;&lt; endl;</span><br><span class="line">    <span class="comment">//  do something</span></span><br><span class="line">    cout &lt;&lt; <span class="string">&quot;忘记释放 int[10]的空间了&quot;</span> &lt;&lt; endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其结果如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">申请了 int[10]的资源</span><br><span class="line">现在 raii 申请了 int[10]的空间</span><br><span class="line">忘记释放 int[10]的空间了</span><br><span class="line">释放了 int[10]的资源</span><br><span class="line">raii 对象被销毁</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>可以看到，在 raii类内部申请的空间随着 raii变量 a 的消亡而得到释放。</p>
+<p>总结下来，RAII 的主要步骤可以分为四步：</p>
+<ol>
+<li>设计一个封装资源的类</li>
+<li>在构造函数中进行资源申请</li>
+<li>使用资源的时候，通过声明一个该 RAII 类的对象来使用资源</li>
+<li>在析构函数中释放资源</li>
+</ol>
+<p>使用 new 和 delete 来进行动态内存的管理是很困难的，无法保证正确的释放。<br>为了更安全、高效的使用动态内存，c++11按照 RAII 的思想，提供了两种智能指针：shared_ptr 和 unique_ptr。  </p>
 <ul>
 <li>shared_ptr:允许多个指针指向同一个对象</li>
 <li>unique_ptr:独占所指向的对象</li>
@@ -444,12 +527,12 @@
 <li><p>因为 某个时刻只能有一个 unique_ptr指向一个给定对象，所以 unique_ptr不能进行普通的赋值 or 拷贝操作。</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">unique_ptr&lt;<span class="type">int</span>&gt; <span class="title">p</span><span class="params">(<span class="keyword">new</span> <span class="type">int</span>(<span class="number">10</span>))</span></span>; <span class="comment">// 指向一个值为10的 int 的指针</span></span><br><span class="line"><span class="function">unique_ptr&lt;<span class="type">int</span>&gt; <span class="title">q</span><span class="params">(p)</span></span>; <span class="comment">// 失败</span></span><br><span class="line">unique_ptr&lt;<span class="type">int</span>&gt; q2 = p;<span class="comment">// 失败</span></span><br><span class="line">unique_ptr&lt;<span class="type">int</span>&gt; q3;</span><br><span class="line">q3 = p;<span class="comment">// 失败</span></span><br></pre></td></tr></table></figure>
 </li>
-<li><p>如果需要进行所有权的转移，可以使用release or reset操作。  </p>
+<li><p>如果需要进行所有权的转移，可以使用release or reset操作。</p>
+</li>
+</ol>
 <blockquote>
 <p>release（returns a pointer to the managed object and releases the ownership<br>）:<a target="_blank" rel="noopener" href="https://en.cppreference.com/w/cpp/memory/unique_ptr/release">https://en.cppreference.com/w/cpp/memory/unique_ptr/release</a></p>
 </blockquote>
-</li>
-</ol>
 <blockquote>
 <p>reset（replaces the managed object<br>）:<a target="_blank" rel="noopener" href="https://en.cppreference.com/w/cpp/memory/unique_ptr/reset">https://en.cppreference.com/w/cpp/memory/unique_ptr/reset</a></p>
 </blockquote>
@@ -459,6 +542,21 @@
 <li>unique_ptr拷贝的赋值的例外：允许拷贝 or 赋值一个将要销毁的unique_ptr:</li>
 </ol>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">unique_ptr&lt;<span class="type">int</span>&gt; <span class="title">clone</span><span class="params">(<span class="type">int</span> p)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">unique_ptr</span>&lt;<span class="type">int</span>&gt;(<span class="keyword">new</span> <span class="built_in">int</span>(p));</span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line"><span class="comment">// 返回一个局部对象的拷贝</span></span><br><span class="line"><span class="function">unique_ptr&lt;<span class="type">int</span>&gt; <span class="title">clone2</span><span class="params">(<span class="type">int</span> p)</span> </span>&#123;</span><br><span class="line">    <span class="function">unique_ptr&lt;<span class="type">int</span>&gt; <span class="title">ret</span><span class="params">(<span class="keyword">new</span> <span class="type">int</span>(p))</span></span>;</span><br><span class="line">    <span class="comment">// do something</span></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="weak-ptr"><a href="#weak-ptr" class="headerlink" title="weak_ptr"></a>weak_ptr</h1><p>weak_ptr 是一种不控制所指向对象生存期的智能指针，他指向一个有 shared_ptr管理的对象。<br>把一个 weak_ptr绑定到 shared_ptr不会改变shared_ptr的引用计数。</p>
+<ul>
+<li>在 shared_ptr的最后一个对象被销毁的时候，其对应的内存对象也会被销毁，此时即使 weak_ptr指向这个对象，对象也还是会被释放！</li>
+</ul>
+<p>创建 weak_ptr 的时候，需要使用 shared_ptr来初始化：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">shared_ptr&lt;<span class="type">int</span>&gt; <span class="title">q</span><span class="params">(<span class="keyword">new</span> <span class="type">int</span>(<span class="number">10</span>))</span></span>;</span><br><span class="line"><span class="function">weak_ptr&lt;<span class="type">int</span>&gt; <span class="title">w</span><span class="params">(q)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>在使用 weak_ptr的时候，需要使用 lock 来检查其指向的对象是否还存在。</p>
+<ul>
+<li>如果存在，返回指向共享对象的 shared_ptr</li>
+<li>如果不存在，返回空的 shared_ptr</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//w.lock()返回一个指向共享对象的 shared_ptr，</span></span><br><span class="line"><span class="keyword">if</span> (shared_ptr&lt;<span class="type">int</span>&gt; np = w.<span class="built_in">lock</span>()) &#123;</span><br><span class="line">    <span class="comment">//在 if 中，np 与q 共享对象</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>代码里面，只有对象存在的时候才进入 if 体内；在 if 体内使用 np 访问共享对象是安全的。</p>
 
       
     </div>
@@ -1152,7 +1250,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-count">10</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
