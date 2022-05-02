@@ -689,7 +689,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2022/05/01/cpp%E5%8A%A8%E6%80%81%E5%86%85%E5%AD%98/" class="post-title-link" itemprop="url">cpp动态内存</a>
+            <a href="/2022/05/01/cpp%E5%8A%A8%E6%80%81%E5%86%85%E5%AD%98/" class="post-title-link" itemprop="url">c++动态内存</a>
         </h2>
 
         <div class="post-meta">
@@ -706,7 +706,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-05-02 20:42:43" itemprop="dateModified" datetime="2022-05-02T20:42:43+08:00">2022-05-02</time>
+                <time title="Modified: 2022-05-03 00:43:34" itemprop="dateModified" datetime="2022-05-03T00:43:34+08:00">2022-05-03</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -770,63 +770,6 @@
 <h2 id="生命周期"><a href="#生命周期" class="headerlink" title="生命周期"></a>生命周期</h2><p>new 出来的对象的生命周期指导 delete 为止。如果 new 之后没有调用 delete，则 new 出来的对象一直存在！！  </p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> *<span class="title">gen</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> *p = <span class="keyword">new</span> <span class="built_in">int</span>(<span class="number">10</span>);</span><br><span class="line">    <span class="keyword">return</span> p; <span class="comment">// gen 函数返回之后，p 指向的对象依旧存在</span></span><br><span class="line">    <span class="comment">// 因为在 gen 之中 p 没有 delete，调用方必须手动释放</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> *p = <span class="built_in">gen</span>();</span><br><span class="line">    <span class="keyword">delete</span> p; <span class="comment">// 调用者手动释放</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/05/01/c-%E5%8A%A8%E6%80%81%E5%86%85%E5%AD%98/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="John Doe">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/05/01/c-%E5%8A%A8%E6%80%81%E5%86%85%E5%AD%98/" class="post-title-link" itemprop="url">c++动态内存</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2022-05-01 23:19:47" itemprop="dateCreated datePublished" datetime="2022-05-01T23:19:47+08:00">2022-05-01</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          
       
     </div>
 
@@ -1007,7 +950,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-count">5</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
