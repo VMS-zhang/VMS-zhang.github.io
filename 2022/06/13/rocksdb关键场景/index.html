@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Flush 的场景 Mem 的大小到达了ColumnFamilyOptions::write_buffer_size阈值   所有 CF 中的 MEM 的大小到达了DBOptions::db_write_buffer_size or DBOptions::write_buffer_manager发出了 flush 的信号 WAL 的文件大小超过了DBOptions::max_total_wal_s">
+<meta property="og:type" content="article">
+<meta property="og:title" content="rocksdb关键场景">
+<meta property="og:url" content="http://example.com/2022/06/13/rocksdb%E5%85%B3%E9%94%AE%E5%9C%BA%E6%99%AF/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Flush 的场景 Mem 的大小到达了ColumnFamilyOptions::write_buffer_size阈值   所有 CF 中的 MEM 的大小到达了DBOptions::db_write_buffer_size or DBOptions::write_buffer_manager发出了 flush 的信号 WAL 的文件大小超过了DBOptions::max_total_wal_s">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220614113450.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220614175631.png">
+<meta property="article:published_time" content="2022-06-13T08:23:47.000Z">
+<meta property="article:modified_time" content="2022-06-15T02:14:56.214Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220614113450.png">
+
+<link rel="canonical" href="http://example.com/2022/06/13/rocksdb%E5%85%B3%E9%94%AE%E5%9C%BA%E6%99%AF/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>rocksdb关键场景 | Hexo</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/06/13/rocksdb%E5%85%B3%E9%94%AE%E5%9C%BA%E6%99%AF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          rocksdb关键场景
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-06-13 16:23:47" itemprop="dateCreated datePublished" datetime="2022-06-13T16:23:47+08:00">2022-06-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-06-15 10:14:56" itemprop="dateModified" datetime="2022-06-15T10:14:56+08:00">2022-06-15</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Flush-的场景"><a href="#Flush-的场景" class="headerlink" title="Flush 的场景"></a>Flush 的场景</h2><ol>
+<li>Mem 的大小到达了ColumnFamilyOptions::write_buffer_size阈值  </li>
+<li>所有 CF 中的 MEM 的大小到达了DBOptions::db_write_buffer_size or DBOptions::write_buffer_manager发出了 flush 的信号</li>
+<li>WAL 的文件大小超过了DBOptions::max_total_wal_size，需要删除最老的 MEM，以清除 WAL。</li>
+</ol>
+<h2 id="Write-Batch-With-Index"><a href="#Write-Batch-With-Index" class="headerlink" title="Write Batch With Index"></a>Write Batch With Index</h2><p>index 是一个 map，映射了 key 和其在 writebatch 的 offset。<br>在读取时候，可以确定这个 WriteBatch 中是否有这个 key，如果有则根据 offset 读取，如果没有则读取 DB。</p>
+<h2 id="DeleteRange-Implementation"><a href="#DeleteRange-Implementation" class="headerlink" title="DeleteRange Implementation"></a>DeleteRange Implementation</h2><p>删除的时候可能会overlap，所以需要拆分：<code>[c, d)@4, [g, h)@7, and [a, z)@10</code> into: <code>[a, c)@10, [c, d)@10, [c, d)@4, [d, g)@10, [g, h)@10, [g, h)@7, [h, z)@10</code>.   写入的是专用的mem 中，直接写入，在 read 的时候进行 split  </p>
+<h2 id="读取-SST"><a href="#读取-SST" class="headerlink" title="读取 SST"></a>读取 SST</h2><p>读取 SST 的时候，使用的是TwoLevelIterator：<br>first_level_iter_：读取的是 index block<br>second_level_iter_：读取的是 data block<br><img src="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220614113450.png">  </p>
+<h2 id="merge-Operator"><a href="#merge-Operator" class="headerlink" title="merge Operator"></a>merge Operator</h2><p><a target="_blank" rel="noopener" href="https://github.com/facebook/rocksdb/wiki/Merge-Operator-Implementation">https://github.com/facebook/rocksdb/wiki/Merge-Operator-Implementation</a><br>主要的实现类是MergeOperator，其有两个函数FullMerge（用于实现读后写）、PartialMerge（由于实现两个 merge 类型值的合并）。  </p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// The Merge Operator</span></span><br><span class="line"><span class="comment">//</span></span><br><span class="line"><span class="comment">// Essentially, a MergeOperator specifies the SEMANTICS of a merge, which only</span></span><br><span class="line"><span class="comment">// client knows. It could be numeric addition, list append, string</span></span><br><span class="line"><span class="comment">// concatenation, edit data structure, ... , anything.</span></span><br><span class="line"><span class="comment">// The library, on the other hand, is concerned with the exercise of this</span></span><br><span class="line"><span class="comment">// interface, at the right time (during get, iteration, compaction...)</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MergeOperator</span> &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="keyword">virtual</span> ~<span class="built_in">MergeOperator</span>() &#123;&#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Gives the client a way to express the read -&gt; modify -&gt; write semantics</span></span><br><span class="line">  <span class="comment">// key:         (IN) The key that&#x27;s associated with this merge operation.</span></span><br><span class="line">  <span class="comment">// existing:    (IN) null indicates that the key does not exist before this op</span></span><br><span class="line">  <span class="comment">// operand_list:(IN) the sequence of merge operations to apply, front() first.</span></span><br><span class="line">  <span class="comment">// new_value:  (OUT) Client is responsible for filling the merge result here</span></span><br><span class="line">  <span class="comment">// logger:      (IN) Client could use this to log errors during merge.</span></span><br><span class="line">  <span class="comment">//</span></span><br><span class="line">  <span class="comment">// Return true on success, false on failure/corruption/etc.</span></span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">bool</span> <span class="title">FullMerge</span><span class="params">(<span class="type">const</span> Slice&amp; key,</span></span></span><br><span class="line"><span class="params"><span class="function">                         <span class="type">const</span> Slice* existing_value,</span></span></span><br><span class="line"><span class="params"><span class="function">                         <span class="type">const</span> std::deque&lt;std::string&gt;&amp; operand_list,</span></span></span><br><span class="line"><span class="params"><span class="function">                         std::string* new_value,</span></span></span><br><span class="line"><span class="params"><span class="function">                         Logger* logger)</span> <span class="type">const</span> </span>= <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// This function performs merge(left_op, right_op)</span></span><br><span class="line">  <span class="comment">// when both the operands are themselves merge operation types.</span></span><br><span class="line">  <span class="comment">// Save the result in *new_value and return true. If it is impossible</span></span><br><span class="line">  <span class="comment">// or infeasible to combine the two operations, return false instead.</span></span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">bool</span> <span class="title">PartialMerge</span><span class="params">(<span class="type">const</span> Slice&amp; key,</span></span></span><br><span class="line"><span class="params"><span class="function">                            <span class="type">const</span> Slice&amp; left_operand,</span></span></span><br><span class="line"><span class="params"><span class="function">                            <span class="type">const</span> Slice&amp; right_operand,</span></span></span><br><span class="line"><span class="params"><span class="function">                            std::string* new_value,</span></span></span><br><span class="line"><span class="params"><span class="function">                            Logger* logger)</span> <span class="type">const</span> </span>= <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// The name of the MergeOperator. Used to check for MergeOperator</span></span><br><span class="line">  <span class="comment">// mismatches (i.e., a DB created with one MergeOperator is</span></span><br><span class="line">  <span class="comment">// accessed using a different MergeOperator)</span></span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">const</span> <span class="type">char</span>* <span class="title">Name</span><span class="params">()</span> <span class="type">const</span> </span>= <span class="number">0</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>get 操作的时候进行实际的 moerge 操作：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Get</span>(key):</span><br><span class="line">  Let stack = [ ];       <span class="comment">// in reality, this should be a &quot;deque&quot;, but stack is simpler to conceptualize for this pseudocode</span></span><br><span class="line">  <span class="keyword">for</span> each entry OPi from newest to oldest:</span><br><span class="line">    <span class="keyword">if</span> OPi.type is <span class="string">&quot;merge_operand&quot;</span>:</span><br><span class="line">      <span class="function">push OPi to stack</span></span><br><span class="line"><span class="function">        <span class="title">while</span> <span class="params">(stack has at least <span class="number">2</span> elements <span class="keyword">and</span> (stack.top() <span class="keyword">and</span> stack.second_from_top() can be partial-merged)</span></span></span><br><span class="line"><span class="params"><span class="function">          OP_left = stack.pop()</span></span></span><br><span class="line"><span class="params"><span class="function">          OP_right = stack.pop()</span></span></span><br><span class="line"><span class="params"><span class="function">          result_OP = client_merge_operator.PartialMerge(OP_left, OP_right)</span></span></span><br><span class="line"><span class="params"><span class="function">          push result_OP to stack</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="keyword">else</span> <span class="keyword">if</span> OPi.type is <span class="string">&quot;put&quot;</span>:</span></span></span><br><span class="line"><span class="params"><span class="function">      <span class="keyword">return</span> client_merge_operator.FullMerge(v, stack);</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="keyword">else</span> <span class="keyword">if</span> v.type is <span class="string">&quot;delete&quot;</span>:</span></span></span><br><span class="line"><span class="params"><span class="function">      <span class="keyword">return</span> client_merge_operator.FullMerge(<span class="literal">nullptr</span>, stack);</span></span></span><br><span class="line"><span class="params"><span class="function"></span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="comment">// We&#x27;ve reached the end (OP0) and we have no Put/Delete, just interpret it as empty (like Delete would)</span></span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">return</span> client_merge_operator.FullMerge(<span class="literal">nullptr</span>, stack);</span></span></span><br></pre></td></tr></table></figure>
+
+<p>在 compaction 的时候，如果有 snap 引用了某一个坂本的 merge 类型的 key，则分段进行 merge：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line">K:    <span class="number">0</span>    +<span class="number">1</span>    +<span class="number">2</span>    +<span class="number">3</span>    +<span class="number">4</span>     +<span class="number">5</span>      <span class="number">2</span>     +<span class="number">1</span>     +<span class="number">2</span></span><br><span class="line">                 ^           ^                            ^</span><br><span class="line">                 |           |                            |</span><br><span class="line">              snapshot1   snapshot2                   snapshot3</span><br><span class="line"></span><br><span class="line">We show it step by step, as we scan from the newest operation to the oldest operation</span><br><span class="line"></span><br><span class="line">K:    <span class="number">0</span>    +<span class="number">1</span>    +<span class="number">2</span>    +<span class="number">3</span>    +<span class="number">4</span>     +<span class="number">5</span>      <span class="number">2</span>    (+<span class="number">1</span>     +<span class="number">2</span>)</span><br><span class="line">                 ^           ^                            ^</span><br><span class="line">                 |           |                            |</span><br><span class="line">              <span class="function">snapshot1   snapshot2                   snapshot3</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">A Merge operation consumes a previous Merge Operation <span class="keyword">and</span> produces a <span class="keyword">new</span> Merge <span class="title">operation</span> <span class="params">(<span class="keyword">or</span> a stack)</span></span></span><br><span class="line"><span class="function">      <span class="params">(+<span class="number">1</span>  +<span class="number">2</span>)</span> </span>=&gt; <span class="built_in">PartialMerge</span>(<span class="number">1</span>,<span class="number">2</span>) =&gt; +<span class="number">3</span></span><br><span class="line"></span><br><span class="line">K:    <span class="number">0</span>    +<span class="number">1</span>    +<span class="number">2</span>    +<span class="number">3</span>    +<span class="number">4</span>     +<span class="number">5</span>      <span class="number">2</span>            +<span class="number">3</span></span><br><span class="line">                 ^           ^                            ^</span><br><span class="line">                 |           |                            |</span><br><span class="line">              snapshot1   snapshot2                   snapshot3</span><br><span class="line"></span><br><span class="line">K:    <span class="number">0</span>    +<span class="number">1</span>    +<span class="number">2</span>    +<span class="number">3</span>    +<span class="number">4</span>     +<span class="number">5</span>     (<span class="number">2</span>            +<span class="number">3</span>)</span><br><span class="line">                 ^           ^                            ^</span><br><span class="line">                 |           |                            |</span><br><span class="line">              snapshot1   snapshot2                   snapshot3</span><br><span class="line"></span><br><span class="line">A Merge operation consumes a previous Put operation <span class="keyword">and</span> produces a <span class="keyword">new</span> Put <span class="built_in">operation</span></span><br><span class="line">      (<span class="number">2</span>   +<span class="number">3</span>) =&gt;  <span class="built_in">FullMerge</span>(<span class="number">2</span>, <span class="number">3</span>) =&gt; <span class="number">5</span></span><br><span class="line"></span><br><span class="line">K:    <span class="number">0</span>    +<span class="number">1</span>    +<span class="number">2</span>    +<span class="number">3</span>    +<span class="number">4</span>     +<span class="number">5</span>                    <span class="number">5</span></span><br><span class="line">                 ^           ^                            ^</span><br><span class="line">                 |           |                            |</span><br><span class="line">              snapshot1   snapshot2                   snapshot3</span><br><span class="line"></span><br><span class="line">A newly produced Put operation is still a Put, thus hides any non-Supporting <span class="built_in">operations</span></span><br><span class="line">      (+<span class="number">5</span>   <span class="number">5</span>) =&gt; <span class="number">5</span></span><br><span class="line"></span><br><span class="line">K:    <span class="number">0</span>    +<span class="number">1</span>    +<span class="number">2</span>   (+<span class="number">3</span>    +<span class="number">4</span>)                          <span class="number">5</span></span><br><span class="line">                 ^           ^                            ^</span><br><span class="line">                 |           |                            |</span><br><span class="line">              snapshot1   snapshot2                   <span class="built_in">snapshot3</span></span><br><span class="line"></span><br><span class="line">(+<span class="number">3</span>  +<span class="number">4</span>) =&gt; <span class="built_in">PartialMerge</span>(<span class="number">3</span>,<span class="number">4</span>) =&gt; +<span class="number">7</span></span><br><span class="line"></span><br><span class="line">K:    <span class="number">0</span>    +<span class="number">1</span>    +<span class="number">2</span>          +<span class="number">7</span>                           <span class="number">5</span></span><br><span class="line">                 ^           ^                            ^</span><br><span class="line">                 |           |                            |</span><br><span class="line">              snapshot1   snapshot2                   snapshot3</span><br><span class="line"></span><br><span class="line">A Merge operation cannot consume a previous Supporting operation.</span><br><span class="line">       (+<span class="number">2</span>   +<span class="number">7</span>) can <span class="keyword">not</span> be combined</span><br><span class="line"></span><br><span class="line">K:    <span class="number">0</span>   (+<span class="number">1</span>    +<span class="number">2</span>)         +<span class="number">7</span>                           <span class="number">5</span></span><br><span class="line">                 ^           ^                            ^</span><br><span class="line">                 |           |                            |</span><br><span class="line">              snapshot1   snapshot2                   <span class="built_in">snapshot3</span></span><br><span class="line"></span><br><span class="line">(+<span class="number">1</span>  +<span class="number">2</span>) =&gt; <span class="built_in">PartialMerge</span>(<span class="number">1</span>,<span class="number">2</span>) =&gt; +<span class="number">3</span></span><br><span class="line"></span><br><span class="line">K:    <span class="number">0</span>          +<span class="number">3</span>          +<span class="number">7</span>                           <span class="number">5</span></span><br><span class="line">                 ^           ^                            ^</span><br><span class="line">                 |           |                            |</span><br><span class="line">              snapshot1   snapshot2                   snapshot3</span><br><span class="line"></span><br><span class="line">K:   (<span class="number">0</span>          +<span class="number">3</span>)         +<span class="number">7</span>                           <span class="number">5</span></span><br><span class="line">                 ^           ^                            ^</span><br><span class="line">                 |           |                            |</span><br><span class="line">              snapshot1   snapshot2                   <span class="built_in">snapshot3</span></span><br><span class="line"></span><br><span class="line">(<span class="number">0</span>   +<span class="number">3</span>) =&gt; <span class="built_in">FullMerge</span>(<span class="number">0</span>,<span class="number">3</span>) =&gt; <span class="number">3</span></span><br><span class="line"></span><br><span class="line">K:               <span class="number">3</span>           +<span class="number">7</span>                           <span class="number">5</span></span><br><span class="line">                 ^           ^                            ^</span><br><span class="line">                 |           |                            |</span><br><span class="line">              snapshot1   snapshot2                   snapshot3</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Compaction</span>(snaps, files):</span><br><span class="line">  <span class="comment">// &lt;snaps&gt; is the set of snapshots (i.e.: a list of sequence numbers)</span></span><br><span class="line">  <span class="comment">// &lt;files&gt; is the set of files undergoing compaction</span></span><br><span class="line">  Let input = a file composed of the <span class="keyword">union</span> of all files</span><br><span class="line">  Let output = a file to store the resulting entries</span><br><span class="line"></span><br><span class="line">  Let stack = [];       <span class="comment">// in reality, this should be a &quot;deque&quot;, but stack is simpler to conceptualize in this pseudo-code</span></span><br><span class="line">  <span class="keyword">for</span> each v from newest to oldest in input:</span><br><span class="line">    clear_stack = <span class="literal">false</span></span><br><span class="line">    <span class="keyword">if</span> v.sequence_number is in snaps:</span><br><span class="line">      clear_stack = <span class="literal">true</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> stack <span class="keyword">not</span> empty &amp;&amp; v.key != stack.top.key:</span><br><span class="line">      clear_stack = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> clear_stack:</span><br><span class="line">      write out all operands on stack to <span class="built_in">output</span> (in the same order as encountered)</span><br><span class="line">      <span class="built_in">clear</span>(stack)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> v.type is <span class="string">&quot;merge_operand&quot;</span>:</span><br><span class="line">      push v to stack</span><br><span class="line">        <span class="keyword">while</span> (stack has at least <span class="number">2</span> elements <span class="built_in">and</span> (stack.top <span class="keyword">and</span> stack.second_from_top can be partial-merged)):</span><br><span class="line">          v1 = stack.<span class="built_in">pop</span>();</span><br><span class="line">          v2 = stack.<span class="built_in">pop</span>();</span><br><span class="line">          result_v = client_merge_operator.<span class="built_in">PartialMerge</span>(v1,v2)</span><br><span class="line">          push result_v to stack</span><br><span class="line">    <span class="keyword">if</span> v.type is <span class="string">&quot;put&quot;</span>:</span><br><span class="line">      write client_merge_operator.<span class="built_in">FullMerge</span>(v, stack) to output</span><br><span class="line">      clear stack</span><br><span class="line">    <span class="keyword">if</span> v.type is <span class="string">&quot;delete&quot;</span>:</span><br><span class="line">      write client_merge_operator.<span class="built_in">FullMerge</span>(<span class="literal">nullptr</span>, stack) to output</span><br><span class="line">      clear stack</span><br><span class="line"></span><br><span class="line">  If stack <span class="keyword">not</span> empty:</span><br><span class="line">    <span class="keyword">if</span> end-of-key-history <span class="keyword">for</span> key on stack:</span><br><span class="line">      write client_merge_operator.<span class="built_in">FullMerge</span>(<span class="literal">nullptr</span>, stack) to output</span><br><span class="line">      <span class="built_in">clear</span>(stack)</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      write out all operands on stack to output</span><br><span class="line">      <span class="built_in">clear</span>(stack)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> output</span><br></pre></td></tr></table></figure>
+
+<h2 id="index-x2F-filter-的-partition"><a href="#index-x2F-filter-的-partition" class="headerlink" title="index&#x2F;filter 的 partition"></a>index&#x2F;filter 的 partition</h2><p><a target="_blank" rel="noopener" href="https://github.com/facebook/rocksdb/wiki/Partitioned-Index-Filters">https://github.com/facebook/rocksdb/wiki/Partitioned-Index-Filters</a><br>对于一个 SSt 来说，可能其内部的 index or filter block 会有 MB 级别大小，这对于 block cache 是个压力。所以把 index block 进行了 partition。<br><img src="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220614175631.png"></p>
+<p>这样在读取 index block 的时候，可以先将 top-level index 放入 cache进行读取，再决定实际读取 index block 的哪个分片。  </p>
+<p>优点：</p>
+<ol>
+<li>提高了 cache 的命中率：更细粒度的使用 cache</li>
+<li>降低 IO 压力：每次读取small size 的index数据</li>
+<li>保持了 index filter 的原有性能：在不进行分区的情况下，减少索引&#x2F;过滤器内存占用的替代方法是牺牲它们的准确性，例如通过更大的数据块或更少的bloom bit来分别拥有更小的索引和过滤器。</li>
+</ol>
+<p>缺点：</p>
+<ol>
+<li>增加了 index block 的空间：大概0.1%-1%</li>
+<li>更多次 IO：如果此时 top-level index 没有在 cache 中，则需要先去读取到 cache，然后读取 partition X，有两次 IO</li>
+<li>局部性降低：如果随机大量读某个 SST，那样可能会进行多次 IO 读取多个 partition 的 index block，还不如直接读取整个的 index block</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/06/13/rocksdb%E5%8F%82%E6%95%B0/" rel="prev" title="rocksdb参数">
+      <i class="fa fa-chevron-left"></i> rocksdb参数
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/07/21/sizeof/" rel="next" title="sizeof">
+      sizeof <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Flush-%E7%9A%84%E5%9C%BA%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">Flush 的场景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Write-Batch-With-Index"><span class="nav-number">2.</span> <span class="nav-text">Write Batch With Index</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DeleteRange-Implementation"><span class="nav-number">3.</span> <span class="nav-text">DeleteRange Implementation</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%BB%E5%8F%96-SST"><span class="nav-number">4.</span> <span class="nav-text">读取 SST</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#merge-Operator"><span class="nav-number">5.</span> <span class="nav-text">merge Operator</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#index-x2F-filter-%E7%9A%84-partition"><span class="nav-number">6.</span> <span class="nav-text">index&#x2F;filter 的 partition</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">John Doe</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

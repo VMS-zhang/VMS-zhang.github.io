@@ -20,22 +20,19 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="LSM KVs exhibit high tail latencies.  Tail latency is especially important, because applications often exhibit high fan-out queries whose overall latency is determined by the response time of the slo">
+  <meta name="description" content="sizeof:求数据类型所占的空间大小.strlen是求字符串的长度，字符串以&#x2F;0结尾.   单个长度 12345678printf(&quot;char&#x3D;%d&#x2F;n&quot;,sizeof(char));  &#x2F;&#x2F;1printf(&quot;char*&#x3D;%d&#x2F;n&quot;,sizeof(char*)); &#x2F;&#x2F;4printf(&quot;int&#x3D;%d&#x2F;n&quot;,sizeof(int">
 <meta property="og:type" content="article">
-<meta property="og:title" content="silk">
-<meta property="og:url" content="http://example.com/2022/05/16/silk/index.html">
+<meta property="og:title" content="C语言中的strlen与sizeof的区别">
+<meta property="og:url" content="http://example.com/2022/07/21/sizeof-strlen/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="LSM KVs exhibit high tail latencies.  Tail latency is especially important, because applications often exhibit high fan-out queries whose overall latency is determined by the response time of the slo">
+<meta property="og:description" content="sizeof:求数据类型所占的空间大小.strlen是求字符串的长度，字符串以&#x2F;0结尾.   单个长度 12345678printf(&quot;char&#x3D;%d&#x2F;n&quot;,sizeof(char));  &#x2F;&#x2F;1printf(&quot;char*&#x3D;%d&#x2F;n&quot;,sizeof(char*)); &#x2F;&#x2F;4printf(&quot;int&#x3D;%d&#x2F;n&quot;,sizeof(int">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220516124746.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220516124904.png">
-<meta property="article:published_time" content="2022-05-16T03:30:01.000Z">
-<meta property="article:modified_time" content="2022-05-18T03:43:02.606Z">
+<meta property="article:published_time" content="2022-07-21T02:35:50.000Z">
+<meta property="article:modified_time" content="2022-07-21T02:38:00.959Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220516124746.png">
 
-<link rel="canonical" href="http://example.com/2022/05/16/silk/">
+<link rel="canonical" href="http://example.com/2022/07/21/sizeof-strlen/">
 
 
 <script id="page-configurations">
@@ -48,7 +45,7 @@
   };
 </script>
 
-  <title>silk | Hexo</title>
+  <title>C语言中的strlen与sizeof的区别 | Hexo</title>
   
 
 
@@ -153,7 +150,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/05/16/silk/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/07/21/sizeof-strlen/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -166,7 +163,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          silk
+          C语言中的strlen与sizeof的区别
         </h1>
 
         <div class="post-meta">
@@ -175,16 +172,10 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
+              
 
-              <time title="Created: 2022-05-16 11:30:01" itemprop="dateCreated datePublished" datetime="2022-05-16T11:30:01+08:00">2022-05-16</time>
+              <time title="Created: 2022-07-21 10:35:50 / Modified: 10:38:00" itemprop="dateCreated datePublished" datetime="2022-07-21T10:35:50+08:00">2022-07-21</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-05-18 11:43:02" itemprop="dateModified" datetime="2022-05-18T11:43:02+08:00">2022-05-18</time>
-              </span>
 
           
 
@@ -197,42 +188,20 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <ol start="2">
-<li>LSM KVs exhibit high tail latencies.  Tail latency is especially important, because applications often exhibit high fan-out queries whose overall latency is determined by the response time of the slowest reply.<br>Internal operations remain necessary, and client operations that arrive during ongoing internal operations experience increased latency because of interference with these internal tasks.</li>
-</ol>
-<ul>
-<li>The root cause of these high tail latencies is interference between client writes, flushes and compactions.</li>
-<li>We then introduce the notion of an I&#x2F;O scheduler for an LSM-based KV store to reduce this interference.</li>
-</ul>
-<p>We explore three techniques as part of this I&#x2F;O scheduler: 1) opportunistically allocating more bandwidth to internal operations during periods of low load, 2) prioritizing flushes and compactions at the lower levels of the tree, and 3) preempting compactions.</p>
-<p>planA：<br>One may at first think that limiting the I&#x2F;O bandwidth allocated to internal operations.</p>
-<ol>
-<li>consider a burst of client writes, triggering a burst of flushes. If a number of compactions is going on at the same time, the flushes have to share the limited bandwidth with the compactions, and they become slow. This leads to the in-memory component filling up and blocking further writes, hence producing latency spikes.</li>
-</ol>
-<p>planB:<br>Limiting the rate of compactions.</p>
-<ol>
-<li>they can lead to the lowest level of the tree filling up, stalling flushes, and in turn stalling writes.</li>
-</ol>
-<p>PlanC:</p>
-<ol>
-<li>introduce an I&#x2F;O scheduler for an LSM-based KV store.</li>
-</ol>
-<p>(1) dynamically allocates bandwidth between client and internal operations, (2) gives preference to internal operations that may block client operations, and (3) allows preemption of less critical internal operations.</p>
-<p><img src="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220516124746.png"></p>
-<p>Figure 2 illustrates an example of a write latency spike (the red dashed line) occurring because L0 reaches maximum capacity (10 SSTables in this example). Several compactions on levels L0, L1 and L2 occur in parallel between t &#x3D; 14 and t &#x3D; 23. Even if many parallel compactions can run at higher levels (i.e., Li to Li+1, where i &gt;0), there can only be one L0 to L1 compaction running at a time. Since I&#x2F;O bandwidth is spread equally over all compactions, L0 to L1 compaction is slowed down. Consequently, L0 is not cleared fast enough, which, in turn, causes flushes from Cm to be temporarily halted.</p>
-<p><img src="https://raw.githubusercontent.com/VMS-zhang/pic/master/img/20220516124904.png"><br>A second cause for latency spikes is Cm filling up because of slow flushing, as illustrated in Figure 3. Here, L0 does not fill up, reaching only 7 SSTables at t &#x3D; 5. However, the flush starting at t &#x3D; 0 takes an unusually long time (5 seconds compared to 1-2 seconds for a typical flush). The cause is that, by coincidence, a large number of compactions are running at the same time, which makes flushing slow because of limited available I&#x2F;O bandwidth. There are 7 ongoing compactions at the time of the very slow flush.</p>
-<p>Conclusion<br>Lesson 1) The main reason for high tail latency is the fact that writes get blocked by Cm filling up. There are two principal reasons for this. The first reason is that L0 on disk is full, which causes flushes from Cm to be halted. L0 reaches its capacity if L0 to L1 compaction cannot keep up. The second reason is that, by coincidence, a large number of compactions are happening concurrently, which causes flushing to be slow because of limited available bandwidth.<br>&#x3D;&#x3D;&gt; As a corollary to Lesson 1, we conclude that not all internal operations are equal. Internal operations on the lower levels of the tree (i.e., closer to Cm) are critical, because failing to complete them in a timely fashion may result in stalling client operations.<br>Lesson 2) Simply limiting bandwidth for internal operations does not solve the problem of limited bandwidth being available for flushes and can in fact exacerbate it in the long run. This approach effectively postpones compactions, and therefore increases the likelihood that at some later point many compactions occur at the same time.  </p>
-<p> design principal</p>
-<ol>
-<li>opportunistically allocating I&#x2F;O bandwidth to internal operations.<br> SILK allocates less I&#x2F;O bandwidth to compactions on higher levels during peak client load, and exploits transient low-load periods to boost the processing of internal operations.</li>
-</ol>
-<p>(1) to limit interference between internal operations and client-facing ones, and (2) to avoid accumulating over time too large a backlog of internal work, preventing overload conditions in the long term.</p>
-<ol start="2">
-<li><p>Prioritizing internal operations at the lower levels of the tree.<br> (1) SILK ensures that the flushes are fast, making room in memory to absorb incoming updates, which directly affects write latency, (2) SILK gives second priority to L0 to L1 compactions, ensuring that L0 does not reach its full capacity, so that flushes can proceed, (3) SILK gives third priority to compactions on the levels below L1 because, while they maintain the structure of the LSM tree, their timely execution does not significantly affect client operation latencies in the short term.</p>
-</li>
-<li><p>Preempting compactions.<br> allows internal operations on lower levels of the tree to preempt compactions on higher levels.</p>
-</li>
-</ol>
+        <p>sizeof:求数据类型所占的空间大小.<br>strlen是求字符串的长度，字符串以&#x2F;0结尾.  </p>
+<p>单个长度</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">printf(&quot;char=%d/n&quot;,sizeof(char));  //1</span><br><span class="line">printf(&quot;char*=%d/n&quot;,sizeof(char*)); //4</span><br><span class="line">printf(&quot;int=%d/n&quot;,sizeof(int)); //4</span><br><span class="line">printf(&quot;int*=%d/n&quot;,sizeof(int*)); //4</span><br><span class="line">printf(&quot;long=%d/n&quot;,sizeof(long)); //4</span><br><span class="line">printf(&quot;long*=%d/n&quot;,sizeof(long*)); //4</span><br><span class="line">printf(&quot;double=%d/n&quot;,sizeof(double)); //8</span><br><span class="line">printf(&quot;double*=%d/n&quot;,sizeof(double*)); //4</span><br></pre></td></tr></table></figure>
+
+<p>数组类型</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">char *c=&quot;abcdef&quot;;</span><br><span class="line"></span><br><span class="line">char d[]=&quot;abcdef&quot;;</span><br><span class="line"></span><br><span class="line">char e[]=&#123;&#x27;a&#x27;,&#x27;b&#x27;,&#x27;c&#x27;,&#x27;d&#x27;,&#x27;e&#x27;,&#x27;f&#x27;&#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">printf(&quot;%d%d/n&quot;,sizeof(c),strlen(c)); // 4 6  </span><br><span class="line">printf(&quot;%d%d/n&quot;,sizeof(d),strlen(d)); // 7 6  </span><br><span class="line">printf(&quot;%d%d/n&quot;,sizeof(e),strlen(e)); // 6 14  </span><br></pre></td></tr></table></figure>
+
+<p>当以字符串赋值时，”abcdef”,结尾自动加一个”&#x2F;0”.</p>
+<p> strlen(c)遇到&#x2F;0就会结束，求的是字符串的长度，为6.</p>
+<p> sizeof(c)求的是类型空间大小，在前面说过，指针型所点的空间大小是4个字节，系统地址总线长度为32位时。</p>
+<p>strlen(d)也是一样，字符串赋值，自动添加&#x2F;0,求字符串的长度当然是6.</p>
+<p>sizeof(d)是求这个数组所占空间的大小，即数组所占内存空间的字节数，应该为7.</p>
+<p>sizeof(e), 数组e以单个元素赋值，没有&#x2F;0结束符，所以所占空间的大小为6个字节。</p>
+<p>strlen(e),去找&#x2F;0结尾的字符串的长度，由于找不到&#x2F;0，所以返回的值是一个不确定的值。</p>
 
     </div>
 
@@ -248,13 +217,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2022/05/03/c-%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0/" rel="prev" title="c++构造函数">
-      <i class="fa fa-chevron-left"></i> c++构造函数
+    <a href="/2022/07/21/sizeof-1/" rel="prev" title="sizeof">
+      <i class="fa fa-chevron-left"></i> sizeof
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2022/05/24/docker%E4%B8%8B%E7%9A%84mysql%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5/" rel="next" title="docker下的mysql主从同步">
-      docker下的mysql主从同步 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
